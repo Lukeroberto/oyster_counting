@@ -16,37 +16,16 @@ def undistort_vignette(original_image, calibration_image):
     
     return (original_image / calibration_image)
 
-def plot_calibration(original_image, calibration_image):
+def threshold_image(undistorted_image):
     """
-    plots the calibration images together.
-    """
-    original_image = load_image(original_image)
-    calibration_image = load_image(calibration_image)
-    
-    corrected = undistort_vignette(original_image, calibration_image)
-    
-    ims = [original_image, calibration_image, corrected]
-    
-    fig = plt.figure(figsize=(8,11))
-    for i in range(3):
-        ax = fig.add_subplot(1, 3, i + 1)
-        ax.imshow(ims[i], cmap='gray')
-        ax.axis('off')
-    plt.savefig("temp/image_calibration.jpg")
-    plt.show()
-    
-    return ims
-    
-def plot_thresholded_image(corrected_image):
-    """
-    plots the thresholded 
+    Takes an image and performs OTSU thresholding 
+
+    returns a binary image
     """
     ret3,mask = cv2.threshold(corrected_image.astype('uint8'),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    plt.imshow(mask, cmap="gray")
-    plt.title("Thresholded")
-    plt.savefig("temp/thresholded_image.jpg")
-    plt.show()
-    
+
+    return mask
+
 def count_dots(corrected):
     """
     counts connected components on a thresholded image
@@ -68,11 +47,3 @@ def count_dots(corrected):
 
     return len(xcnts)
 
-def plot_histogram(image, name):
-    """
-    plots a histogram of pixel values
-    """
-    plt.hist(image.ravel(), bins=256)
-    plt.title(image)
-    plt.savefig("temp/{}_histogram.jpg".format(name))
-    plt.show()
