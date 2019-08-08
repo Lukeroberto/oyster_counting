@@ -26,18 +26,18 @@ def threshold_image(undistorted_image):
 
     return mask
 
-def count_dots(corrected):
+def count_components(corrected):
     """
     counts connected components on a thresholded image
     """
-    ## threshold
-    th, threshed = cv2.threshold(255 - corrected.astype('uint8'), 100, 255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
+    # threshold
+    th, threshed = threshold_image(corrected)
 
-    ## findcontours
+    # findcontours
     cnts = cv2.findContours(threshed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
 
 
-    ## filter by area
+    # filter by area
     s1= 3
     s2 = 20
     xcnts = []
@@ -45,5 +45,5 @@ def count_dots(corrected):
         if s1<cv2.contourArea(cnt) <s2:
             xcnts.append(cnt)
 
-    return len(xcnts)
+    return cnts, len(xcnts)
 

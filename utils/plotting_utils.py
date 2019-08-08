@@ -35,6 +35,13 @@ def plot_thresholded_image(corrected_image):
     plt.savefig("temp/thresholded_image.jpg")
     plt.show()
 
+def plot_counted_components(image, components):
+    """
+    plots the component contours over the image
+    """
+
+    raise NotImplementedError
+
 def plot_histogram(image, name):
     """
     plots a histogram of pixel values
