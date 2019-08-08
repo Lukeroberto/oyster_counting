@@ -7,7 +7,7 @@ def load_image(filepath):
     Load image as grayscale
     """
     
-    return cv2.imread('tetra_ex.jpg', 0)
+    return cv2.imread(filepath, 0)
 
 def undistort_vignette(original_image, calibration_image):
     """ 
@@ -16,63 +16,44 @@ def undistort_vignette(original_image, calibration_image):
     
     return (original_image / calibration_image)
 
-def plot_calibration(original_image, calibration_image):
+def threshold_image(image):
     """
-    plots the calibration images together.
+    Takes an image and performs OTSU thresholding 
+
+    returns a binary image
     """
-    original_image = load_image(original_image)
-    calibration_image = load_image(calibration_image)
-    
-    corrected = undistort_vignette(original_image, calibration_image)
-    
-    ims = [original_image, calibration_image, corrected]
-    
-    fig = plt.figure(figsize=(8,11))
-    for i in range(3):
-        ax = fig.add_subplot(1, 3, i + 1)
-        ax.imshow(ims[i], cmap='gray')
-        ax.axis('off')
-    plt.savefig("temp/image_calibration.jpg")
-    plt.show()
-    
-    return ims
-    
-def plot_thresholded_image(corrected_image):
+    ret3,mask = cv2.threshold(image.astype('uint8'),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+    return mask
+
+def component_area_stats(cnts):
     """
-    plots the thresholded 
+    For now returns the smallest contour area and upper quartile
     """
-    ret3,mask = cv2.threshold(corrected_image.astype('uint8'),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    plt.imshow(mask, cmap="gray")
-    plt.title("Thresholded")
-    plt.savefig("temp/thresholded_image.jpg")
-    plt.show()
     
-def count_dots(corrected):
+    contour_areas = np.zeros(len(cnts))
+    for i, c in enumerate(cnts):
+        contour_areas[i] = cv2.contourArea(c)
+        
+    return np.min(contour_areas), np.percentile(contour_areas, 75)
+
+def count_components(corrected):
     """
     counts connected components on a thresholded image
     """
-    ## threshold
-    th, threshed = cv2.threshold(255 - corrected.astype('uint8'), 100, 255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
+    # threshold
+    threshed = threshold_image(corrected)
 
-    ## findcontours
+    # findcontours
     cnts = cv2.findContours(threshed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
 
+    area_min, area_max = component_area_stats(cnts)
 
-    ## filter by area
-    s1= 3
-    s2 = 20
+    # filter by area
     xcnts = []
     for cnt in cnts:
-        if s1<cv2.contourArea(cnt) <s2:
+        if area_min <cv2.contourArea(cnt) < area_max:
             xcnts.append(cnt)
 
-    return len(xcnts)
+    return cnts, len(xcnts)
 
-def plot_histogram(image, name):
-    """
-    plots a histogram of pixel values
-    """
-    plt.hist(image.ravel(), bins=256)
-    plt.title(image)
-    plt.savefig("temp/{}_histogram.jpg".format(name))
-    plt.show()
