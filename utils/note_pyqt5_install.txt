@@ -1,0 +1,1 @@
+To install PyQt5, you must have the most up-to-date version of pip/pip3. This can be done by doing pip3 install --upgrade pip. Then run pip3 install --user PyQt5.
